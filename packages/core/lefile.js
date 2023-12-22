@@ -9,7 +9,7 @@ export const LETypes = [
 ];
 
 // did it come from the correct place? Bad way to check, but ok
-export const magicNumber = 0x434d4631;
+export const magicNumber = 0x434d4631; //D
 
 function getInitCRC(type, name) {
   const nameBuffer = Buffer.alloc(8);
