@@ -15,8 +15,7 @@ export {
   KeyNames,
   KeyModifiers,
   ModifierByKeys,
-} from "./keys.js";
-
+} from "./keys";
 export class Gk6xDevice {
   serialNumber: string | undefined;
   manufacturer: string | undefined;
@@ -95,7 +94,13 @@ export class Gk6xDevice {
 
   // fire a command to keyboard
   // promise resolves on answer or errors on timeout
-  cmd(cmd: any, sub_cmd = 0, header = 0, body?: any, timeout = 1000) {
+  cmd(
+    cmd: any,
+    sub_cmd = 0,
+    header = 0,
+    body?: any,
+    timeout = 1000
+  ): Promise<Buffer> {
     const buffer = Buffer.alloc(64);
     buffer.writeUInt8(cmd, 0);
     buffer.writeUInt8(sub_cmd, 1);
@@ -123,7 +128,8 @@ export class Gk6xDevice {
         }, 1);
       });
     } else {
-      return Promise.resolve();
+      // TODO: return with buffer something
+      return null as any;
     }
   }
 
@@ -156,17 +162,18 @@ export class Gk6xDevice {
   }
 
   // get device-id from keyboard
-  deviceId() {
+  async deviceId() {
     return this.cmd(0x01, 0x02).then((buffer) => {
-      let deviceId = 0n;
-      for (let i = 0; i < 6; i++)
+      let deviceId = 0;
+      for (let i = 0; i < 6; i++) {
         deviceId |= BigInt(buffer[8 + i]) << BigInt(i * 8);
-      return BigInt.asUintN(64, deviceId).toString(10);
+        return BigInt.asUintN(64, deviceId).toString(10);
+      }
     });
   }
 
   // get model-id from keyboard
-  modelId() {
+  async modelId() {
     return this.cmd(0x01, 0x08).then((buffer) => buffer.readUInt32LE(8));
   }
 
@@ -177,23 +184,23 @@ export class Gk6xDevice {
   }
 
   // get key-matrix from keyboard
-  matrix() {
-    return this.cmd(0x01, 0x09).then((buffer) => ({
+  async matrix() {
+    return await this.cmd(0x01, 0x09).then((buffer) => ({
       col: buffer.readUInt8(8),
       row: buffer.readUInt8(9),
     }));
   }
 
-  cleanData(mode, dataType) {
-    return this.cmd(0x21, mode, dataType).then((buffer) => ({
+  async cleanData(mode: number, dataType: number) {
+    return await this.cmd(0x21, mode, dataType).then((buffer) => ({
       ack: buffer.readUInt8(1),
       buffer,
     }));
   }
 
-  writeKeyData(mode, addr, data) {
+  async writeKeyData(mode, addr, data) {
     const header = (data.length << 16) + addr;
-    return this.cmd(0x22, mode, header, data).then((buffer) => ({
+    return await this.cmd(0x22, mode, header, data).then((buffer) => ({
       ack: buffer.readUInt8(1),
       crc: buffer.readUInt16LE(6),
     }));
