@@ -13,7 +13,10 @@
     "url": "git+https://github.com/konsumer/node-gk6x.git"
   },
   "keywords": [],
-  "author": "David Konsumer <konsumer@jetboystudio.com>",
+  "author": {
+    "name": "David Konsumer <konsumer@jetboystudio.com>"
+  },
+  "contributors": ["Amine OUHANI <amineprojet7@gmail.com"],
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/konsumer/node-gk6x/issues"
