@@ -1,4 +1,5 @@
-import crc16ccitt from "./crc16_ccitt.js";
+import crc16ccitt from "./crc16_ccitt";
+import { Buffer } from "buffer";
 export const LETypes = [
   "_",
   "PROFILE",
@@ -41,7 +42,7 @@ function decodeBodyBuffer(
   return pData;
 }
 
-function headerBufferToObject(h) {
+function headerBufferToObject(h: Buffer) {
   return {
     magic: h.readUInt32LE(0),
     hcrc: h.readUInt32LE(4),
@@ -100,8 +101,8 @@ export function getInfoFromLEBuffer(buffer) {
   if (hcrc !== header.hcrc) {
     throw new Error("Header CRC mismatch");
   }
-
-  const body = decodeBodyBuffer(header, encodedBody);
+  // TODO: fix it properly
+  const body = decodeBodyBuffer(header as any, encodedBody);
 
   if (header.dcrc !== crc16ccitt(body)) {
     throw new Error("Data CRC mismatch");

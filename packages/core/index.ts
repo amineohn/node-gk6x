@@ -1,5 +1,5 @@
 import { devices, HID } from "node-hid";
-import crc16ccitt from "./crc16_ccitt.js";
+import crc16ccitt from "./utils/crc16_ccitt.js";
 import { Buffer } from "buffer";
 import models from "./modellist.json";
 
@@ -10,14 +10,14 @@ export {
   magicNumber,
   getInfoFromLEBuffer,
   getLEBufferFromInfo,
-} from "./lefile";
+} from "./utils/lefile.js";
 export {
   KeyCodes,
   CodeByKeys,
   KeyNames,
   KeyModifiers,
   ModifierByKeys,
-} from "./keys";
+} from "./utils/keys.js";
 export class THDevice {
   serialNumber: string | undefined;
   manufacturer: string | undefined;
