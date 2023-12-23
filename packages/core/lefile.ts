@@ -11,13 +11,22 @@ export const LETypes = [
 // did it come from the correct place? Bad way to check, but ok
 export const magicNumber = 0x434d4631; //D
 
-function getInitCRC(type, name) {
+function getInitCRC(type: string, name: string) {
   const nameBuffer = Buffer.alloc(8);
   nameBuffer.write(name, 0, "latin1");
   return crc16ccitt(crc16ccitt(Buffer.from(LETypes[type])), nameBuffer);
 }
 
-function decodeBodyBuffer({ typeId, typeName }, pData) {
+function decodeBodyBuffer(
+  {
+    typeId,
+    typeName,
+  }: {
+    typeId: string;
+    typeName: string;
+  },
+  pData: any
+) {
   let gnCRC = getInitCRC(typeId, typeName);
   let gnDataCRC = 0xffff;
   let nLen = pData.length;
@@ -44,7 +53,15 @@ function headerBufferToObject(h) {
   };
 }
 
-function headerObjectToBuffer(i) {
+function headerObjectToBuffer(i: {
+  typeId: number;
+  typeName: string;
+  magic: number;
+  hcrc: number;
+  time: number;
+  size: number;
+  dcrc: number;
+}) {
   if (!i.typeId && !i.typeName) {
     i.typeName = "LIGHT";
   }

@@ -1,6 +1,6 @@
 import { devices, HID } from "node-hid";
 import crc16ccitt from "./crc16_ccitt.js";
-
+import { Buffer } from "buffer";
 import models from "./modellist.json";
 
 export {
@@ -8,7 +8,7 @@ export {
   magicNumber,
   getInfoFromLEBuffer,
   getLEBufferFromInfo,
-} from "./lefile.js";
+} from "./lefile";
 export {
   KeyCodes,
   CodeByKeys,
@@ -18,6 +18,14 @@ export {
 } from "./keys.js";
 
 export class Gk6xDevice {
+  serialNumber: string | undefined;
+  manufacturer: string | undefined;
+  product: string | undefined;
+  release: number;
+  device: HID;
+  onError: any;
+  responses: {};
+  onData: any;
   static list() {
     return devices().filter(
       (d) => d.vendorId === 0x1ea7 && d.productId === 0x907
@@ -39,7 +47,7 @@ export class Gk6xDevice {
       throw new Error("Apple keyboard with bad manufacturer not found!");
     }
 
-    const device = new HID(screwedUpKeyboard.path);
+    const device = new HID(screwedUpKeyboard.path!);
     const buffer = Buffer.alloc(64);
     buffer.fill(0);
     buffer.writeUInt8(0x41, 0);
@@ -61,7 +69,7 @@ export class Gk6xDevice {
     this.manufacturer = dev.manufacturer;
     this.product = dev.product;
     this.release = dev.release;
-    this.device = new HID(dev.path);
+    this.device = new HID(dev.path!);
 
     this.device.on("error", (error) => {
       console.error("ERROR", error);
@@ -87,7 +95,7 @@ export class Gk6xDevice {
 
   // fire a command to keyboard
   // promise resolves on answer or errors on timeout
-  cmd(cmd, sub_cmd = 0, header = 0, body, timeout = 1000) {
+  cmd(cmd: any, sub_cmd = 0, header = 0, body?: any, timeout = 1000) {
     const buffer = Buffer.alloc(64);
     buffer.writeUInt8(cmd, 0);
     buffer.writeUInt8(sub_cmd, 1);

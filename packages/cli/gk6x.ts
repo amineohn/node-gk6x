@@ -1,19 +1,18 @@
 #!/usr/bin/env node
-
-const yargs = require("yargs/yargs");
-const { hideBin } = require("yargs/helpers");
+import yargs from "yargs";
+import { hideBin } from "yargs/helpers";
 const { readFile, writeFile } = require("fs").promises;
-const { extname, basename } = require("path");
-const { devices, HID } = require("node-hid");
-const chalk = require("chalk");
+import { extname, basename } from "path";
+import { devices, HID } from "node-hid";
+import chalk from "chalk";
 
 // stupid hack to make pkg work
-const {
+import {
   Gk6xDevice,
   getInfoFromLEBuffer,
   CodeByKeys,
   ModifierByKeys,
-} = require("./node_modules/@gk6x/core");
+} from "../core";
 
 function convertLEtoPixeltris(buffer) {
   const info = getInfoFromLEBuffer(buffer);
@@ -34,17 +33,13 @@ function convertLEtoPixeltris(buffer) {
   return out;
 }
 
-function convertPixeltrisToLE(buffer) {
-  const out = {};
-  return out;
-}
-
-function onData(data, name, keys) {
+function onData(data: string, name: string, keys: string[]) {
   console.log(
     chalk.yellow(name).padEnd(20, " "),
     chalk.white(
       data
         .slice(0, 8)
+        //@ts-ignore
         .toString("hex")
         .replace(/([0-9a-f]{2})/g, "$1 ")
         .toUpperCase()
@@ -53,7 +48,7 @@ function onData(data, name, keys) {
   );
 }
 
-function arrayEquals(a, b) {
+function arrayEquals(a: string[], b: string[]) {
   return (
     Array.isArray(a) &&
     Array.isArray(b) &&
@@ -62,8 +57,8 @@ function arrayEquals(a, b) {
   );
 }
 
-function getKeysStandard(d) {
-  const keys = [];
+function getKeysStandard(d: string) {
+  const keys = [] as string[];
 
   if (d[0] && ModifierByKeys[d[0]]) {
     keys.push(ModifierByKeys[d[0]]);
@@ -76,23 +71,31 @@ function getKeysStandard(d) {
   return keys;
 }
 
-function getKeysExtended(buffer) {
-  const keys = [];
+function getKeysExtended(buffer: string[]) {
+  const keys = [] as string[];
   const b = [...buffer.slice(1, 8)];
 
-  if (arrayEquals(b, [0x02, 0x00, 0x00, 0x00, 0x00, 0xa3, 0x11])) {
+  if (
+    arrayEquals(b, ["0x02", "0x00", "0x00", "0x00", "0x00", "0xa3", "0x11"])
+  ) {
     keys.push("KeyboardModeWindows");
   }
 
-  if (arrayEquals(b, [0x01, 0x00, 0x00, 0x00, 0x00, 0xa7, 0x25])) {
+  if (
+    arrayEquals(b, ["0x01", "0x00", "0x00", "0x00", "0x00", "0xa7", "0x25"])
+  ) {
     keys.push("KeyboardModeOff");
   }
 
-  if (arrayEquals(b, [0x03, 0x00, 0x00, 0x00, 0x00, 0x5f, 0x02])) {
+  if (
+    arrayEquals(b, ["0x03", "0x00", "0x00", "0x00", "0x00", "0x5f", "0x02"])
+  ) {
     keys.push("KeyboardModeMac");
   }
 
-  if (arrayEquals(b, [0x04, 0x00, 0x00, 0x00, 0x00, 0xab, 0x79])) {
+  if (
+    arrayEquals(b, ["0x04", "0x00", "0x00", "0x00", "0x00", "0xab", "0x79"])
+  ) {
     keys.push("KeyboardMode3");
   }
 
@@ -112,8 +115,9 @@ yargs(hideBin(process.argv))
   .command(
     "convert <file>",
     "Convert to/from pixeltris and official le. It guesses format based on file-extension.",
+    //@ts-ignore
     (y) => {},
-    async ({ file }) => {
+    async ({ file }: { file: string }) => {
       const ext = extname(file);
       const name = basename(file, ext);
       const source = await readFile(file);
@@ -147,7 +151,7 @@ yargs(hideBin(process.argv))
         const k = new Gk6xDevice();
         k.writeMacVid();
         k.close();
-      } catch (e) {
+      } catch (e: any) {
         console.error(
           "There was an issue opening a normal keyboard to put it in fake-apple mode. Maybe it's already in apple-mode? You might also need to run with sudo or something."
         );
@@ -163,7 +167,7 @@ yargs(hideBin(process.argv))
     (a) => {
       try {
         Gk6xDevice.writeNormalVid();
-      } catch (e) {
+      } catch (e: any) {
         console.error(
           "There was an issue opening a fake apple keyboard to put it in normal mode. Maybe it's already in normal-mode? You might also need to run with sudo or something."
         );
@@ -182,7 +186,7 @@ yargs(hideBin(process.argv))
 
       const k = new Gk6xDevice();
       const info = await k.modelInfo();
-      console.log(`Listening on ${info.Name}`);
+      console.log(`Listening on ${info?.Name}`);
       k.onData = (d) => onData(d, "Extended", getKeysExtended(d));
       await k.setKeyReport(true);
 
@@ -198,9 +202,9 @@ yargs(hideBin(process.argv))
           d.vendorId === 0x1ea7 && d.productId === 0x907 && d.usagePage === 1
       );
       if (k0) {
-        const k1 = new HID(k0.path);
+        const k1 = new HID(k0.path!);
         k1.on("data", (d) => {
-          if (arrayEquals([...d], [0, 0, 0, 0, 0, 0, 0, 0])) {
+          if (arrayEquals([...d], ["0", "0", "0", "0", "0", "0", "0", "0"])) {
             onData(d, "Key Up", []);
           } else {
             const keys = getKeysStandard(d);
