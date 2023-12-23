@@ -3,6 +3,8 @@ import crc16ccitt from "./crc16_ccitt.js";
 import { Buffer } from "buffer";
 import models from "./modellist.json";
 
+// NOTES: A voir pour comprendre mieux l'utilité de chaques fonctions et mieux type safe
+
 export {
   LETypes,
   magicNumber,
@@ -154,7 +156,7 @@ export class Gk6xDevice {
   }
 
   // get firmware version from keyboard
-  version() {
+  async version() {
     return this.cmd(0x01, 0x01).then((buffer) => ({
       id: buffer.readUInt32LE(8),
       version: buffer.readUInt16LE(12),
@@ -166,7 +168,9 @@ export class Gk6xDevice {
     return this.cmd(0x01, 0x02).then((buffer) => {
       let deviceId = 0;
       for (let i = 0; i < 6; i++) {
+        //@ts-ignore
         deviceId |= BigInt(buffer[8 + i]) << BigInt(i * 8);
+        //@ts-ignore
         return BigInt.asUintN(64, deviceId).toString(10);
       }
     });
@@ -198,7 +202,7 @@ export class Gk6xDevice {
     }));
   }
 
-  async writeKeyData(mode, addr, data) {
+  async writeKeyData(mode: number, addr: any, data: any) {
     const header = (data.length << 16) + addr;
     return await this.cmd(0x22, mode, header, data).then((buffer) => ({
       ack: buffer.readUInt8(1),
@@ -208,33 +212,33 @@ export class Gk6xDevice {
 
   // TODO: what is 0x23?
 
-  writeModeLE(mode, addr, data) {
+  async writeModeLE(mode: number, addr: any, data: any) {
     const header = (data.length << 16) + addr;
-    return this.cmd(0x24, mode, header, data).then((buffer) => ({
+    return await this.cmd(0x24, mode, header, data).then((buffer) => ({
       ack: buffer.readUInt8(1),
       crc: buffer.readUInt16LE(6),
     }));
   }
 
-  writeMacro(mode, addr, data) {
+  async writeMacro(mode: number, addr: any, data: any) {
     const header = (data.length << 16) + addr;
-    return this.cmd(0x25, mode, header, data).then((buffer) => ({
+    return await this.cmd(0x25, mode, header, data).then((buffer) => ({
       ack: buffer.readUInt8(1),
       crc: buffer.readUInt16LE(6),
     }));
   }
 
-  writeLightKey(mode, addr, data) {
+  async writeLightKey(mode: number, addr: any, data: any) {
     const header = (data.length << 16) + addr;
-    return this.cmd(0x26, mode, header, data).then((buffer) => ({
+    return await this.cmd(0x26, mode, header, data).then((buffer) => ({
       ack: buffer.readUInt8(1),
       crc: buffer.readUInt16LE(6),
     }));
   }
 
-  writeLightData(mode, addr, data) {
+  async writeLightData(mode: number, addr: any, data: any) {
     const header = (data.length << 16) + addr;
-    return this.cmd(0x27, mode, header, data).then((buffer) => ({
+    return await this.cmd(0x27, mode, header, data).then((buffer) => ({
       ack: buffer.readUInt8(1),
       crc: buffer.readUInt16LE(6),
     }));
@@ -244,35 +248,41 @@ export class Gk6xDevice {
   // TODO: what is 0x29?
   // TODO: what is 0x30?
 
-  writeFnData(mode, addr, data) {
+  async writeFnData(mode: number, addr: any, data: any) {
     const header = (data.length << 16) + addr;
-    return this.cmd(0x31, mode, header, data).then((buffer) => ({
+    return await this.cmd(0x31, mode, header, data).then((buffer) => ({
       ack: buffer.readUInt8(1),
       crc: buffer.readUInt16LE(6),
     }));
   }
 
   // tell keyboard to report keys or not
-  setKeyReport(enabled) {
-    return this.cmd(0x15, 0x03, 0, Buffer.from([enabled ? 0x01 : 0x00]), 0);
+  async setKeyReport(enabled: boolean) {
+    return await this.cmd(
+      0x15,
+      0x03,
+      0,
+      Buffer.from([enabled ? 0x01 : 0x00]),
+      0
+    );
   }
 
-  keyEvent(data) {
-    return this.cmd(0x15, 0x02, 0, Buffer.from(data));
+  async keyEvent(data: any) {
+    return await this.cmd(0x15, 0x02, 0, Buffer.from(data));
   }
 
-  mouseEvent(mouse) {
-    return this.cmd(0x15, 0x01, 0, Buffer.from([mouse]));
+  async mouseEvent(mouse: any) {
+    return await this.cmd(0x15, 0x01, 0, Buffer.from([mouse]));
   }
 
-  setKeyTable(byTableTyte, wAddr, BbyData) {
+  async setKeyTable(byTableTyte: number, wAddr: any, BbyData: any) {
     const header = wAddr + ((BbyData.length << 24) & 0xff000000);
     return this.cmd(0x16, byTableTyte, header, BbyData).then(
       (buffer) => buffer.readUInt8(1) === 1
     );
   }
 
-  setLEConfig(
+  async setLEConfig({
     byLEModel,
     byLESubModel,
     byLELight,
@@ -281,8 +291,18 @@ export class Gk6xDevice {
     byR,
     byG,
     byB,
-    bEnable
-  ) {
+    bEnable,
+  }: {
+    byLEModel: number;
+    byLESubModel: number;
+    byLELight: number;
+    byLESpeed: number;
+    byLEDir: number;
+    byR: number;
+    byG: number;
+    byB: number;
+    bEnable: number;
+  }) {
     const body = Buffer.alloc(9);
     body.writeUInt8(byLEModel, 0);
     body.writeUInt8(byLESubModel, 1);
@@ -293,19 +313,21 @@ export class Gk6xDevice {
     body.writeUInt8(byG, 6);
     body.writeUInt8(byB, 7);
     body.writeUInt8(bEnable * 1, 8);
-    return this.cmd(0x17, 0x01, 0, body).then(
+    return await this.cmd(0x17, 0x01, 0, body).then(
       (buffer) => buffer.readUInt8(1) === 1
     );
   }
 
-  setLEDefine(wAddr, BbyData) {
+  async setLEDefine(wAddr: any, BbyData: any) {
     const header = wAddr + ((BbyData.length << 24) & 0xff000000);
-    return this.cmd(0x1a, 0x01, header, BbyData).then(
+    return await this.cmd(0x1a, 0x01, header, BbyData).then(
       (buffer) => buffer.readUInt8(1) === 1
     );
   }
 
-  saveLEDefine() {
-    return this.cmd(0x1a, 0x02).then((buffer) => buffer.readUInt8(1) === 1);
+  async saveLEDefine() {
+    return await this.cmd(0x1a, 0x02).then(
+      (buffer) => buffer.readUInt8(1) === 1
+    );
   }
 }
