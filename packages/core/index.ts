@@ -18,7 +18,7 @@ export {
   KeyModifiers,
   ModifierByKeys,
 } from "./keys";
-export class Gk6xDevice {
+export class THDevice {
   serialNumber: string | undefined;
   manufacturer: string | undefined;
   product: string | undefined;
@@ -27,7 +27,7 @@ export class Gk6xDevice {
   onError: any;
   responses: {};
   onData: any;
-  static list() {
+  list() {
     return devices().filter(
       (d) => d.vendorId === 0x1ea7 && d.productId === 0x907
     );
@@ -57,7 +57,7 @@ export class Gk6xDevice {
   }
 
   constructor() {
-    const keyboards = Gk6xDevice.list();
+    const keyboards = this.list();
 
     // on mine, there were many /dev/hidraw* but only usagePage=0xff00 works
     const dev = keyboards.find((k) => k.usagePage === 0xff00);

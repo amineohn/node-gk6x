@@ -8,7 +8,7 @@ import chalk from "chalk";
 
 // stupid hack to make pkg work
 import {
-  Gk6xDevice,
+  THDevice,
   getInfoFromLEBuffer,
   CodeByKeys,
   ModifierByKeys,
@@ -148,9 +148,9 @@ yargs(hideBin(process.argv))
     (y) => {},
     (a) => {
       try {
-        const k = new Gk6xDevice();
-        k.writeMacVid();
-        k.close();
+        const th = new THDevice();
+        th.writeMacVid();
+        th.close();
       } catch (e: any) {
         console.error(
           "There was an issue opening a normal keyboard to put it in fake-apple mode. Maybe it's already in apple-mode? You might also need to run with sudo or something."
@@ -166,7 +166,7 @@ yargs(hideBin(process.argv))
     (y) => {},
     (a) => {
       try {
-        Gk6xDevice.writeNormalVid();
+        THDevice.writeNormalVid();
       } catch (e: any) {
         console.error(
           "There was an issue opening a fake apple keyboard to put it in normal mode. Maybe it's already in normal-mode? You might also need to run with sudo or something."
@@ -184,10 +184,10 @@ yargs(hideBin(process.argv))
       // set to raw, so you can enter keys without printing them
       process.stdin.setRawMode(true);
 
-      const k = new Gk6xDevice();
+      const k = new THDevice();
       const info = await k.modelInfo();
       console.log(`Listening on ${info?.Name}`);
-      k.onData = (d) => onData(d, "Extended", getKeysExtended(d));
+      k.onData = (d: any) => onData(d, "Extended", getKeysExtended(d));
       await k.setKeyReport(true);
 
       process.on("exit", () => {
