@@ -1,13 +1,6 @@
-import shelljs from "shelljs";
+import { mkdir, exec, cp, cd, rm } from "shelljs";
 import Zip from "node-zip";
-import {
-  createReadStream,
-  createWriteStream,
-  readFileSync,
-  writeFileSync,
-} from "fs";
-
-const { mkdir, exec, cp, cd, rm, ls } = shelljs;
+import { readFileSync, writeFileSync } from "fs";
 
 rm("-rf", "dist");
 mkdir("-p", "dist");
