@@ -6,7 +6,7 @@
   "description": "This adds support for GK6X keyboards in nodejs.",
   "scripts": {
     "test": "lerna run --stream test",
-    "release": "node release.js"
+    "release": "tsup release.ts"
   },
   "repository": {
     "type": "git",
@@ -16,7 +16,9 @@
   "author": {
     "name": "David Konsumer <konsumer@jetboystudio.com>"
   },
-  "contributors": ["Amine OUHANI <amineprojet7@gmail.com"],
+  "contributors": [
+    "Amine OUHANI <amineprojet7@gmail.com"
+  ],
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/konsumer/node-gk6x/issues"
